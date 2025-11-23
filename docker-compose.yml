@@ -1,0 +1,128 @@
+version: '3.8'
+
+services:
+  # Redis - Session cache and rate limiting
+  redis:
+    image: redis:7-alpine
+    container_name: scrybe-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+      - ./deployment/redis/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    networks:
+      - scrybe-network
+
+  # ClickHouse - Analytical database
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: scrybe-clickhouse
+    ports:
+      - "8123:8123"  # HTTP interface
+      - "9000:9000"  # Native client
+    environment:
+      CLICKHOUSE_DB: scrybe
+      CLICKHOUSE_USER: scrybe
+      CLICKHOUSE_PASSWORD: scrybe_dev_password
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+      - ./deployment/clickhouse/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "localhost:8123/ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    networks:
+      - scrybe-network
+
+  # Scrybe Gateway - Ingestion API
+  gateway:
+    build:
+      context: .
+      dockerfile: deployment/docker/gateway.Dockerfile
+    container_name: scrybe-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      # Server config
+      SCRYBE_HOST: "0.0.0.0"
+      SCRYBE_PORT: "8080"
+      
+      # Redis config
+      SCRYBE_REDIS_URL: "redis://redis:6379"
+      SCRYBE_REDIS_POOL_SIZE: "10"
+      
+      # ClickHouse config
+      SCRYBE_CLICKHOUSE_URL: "http://clickhouse:8123"
+      SCRYBE_CLICKHOUSE_DATABASE: "scrybe"
+      SCRYBE_CLICKHOUSE_USERNAME: "scrybe"
+      SCRYBE_CLICKHOUSE_PASSWORD: "scrybe_dev_password"
+      
+      # HMAC key for authentication (dev only!)
+      SCRYBE_HMAC_KEY: "dev_hmac_key_32_bytes_min_length_required_for_sha256"
+      
+      # Feature flags
+      SCRYBE_ENABLE_METRICS: "true"
+      SCRYBE_LOG_LEVEL: "info"
+    depends_on:
+      redis:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    networks:
+      - scrybe-network
+
+  # Test Web App - Demo application with Scrybe SDK
+  test-app:
+    build:
+      context: .
+      dockerfile: deployment/docker/test-app.Dockerfile
+    container_name: scrybe-test-app
+    ports:
+      - "3000:80"
+    environment:
+      SCRYBE_API_URL: "http://localhost:8080"
+      SCRYBE_API_KEY: "dev_hmac_key_32_bytes_min_length_required_for_sha256"
+    depends_on:
+      gateway:
+        condition: service_healthy
+    networks:
+      - scrybe-network
+
+  # Admin Dashboard - Simple monitoring interface
+  dashboard:
+    build:
+      context: .
+      dockerfile: deployment/docker/dashboard.Dockerfile
+    container_name: scrybe-dashboard
+    ports:
+      - "8088:80"
+    environment:
+      CLICKHOUSE_URL: "http://clickhouse:8123"
+      CLICKHOUSE_USER: "scrybe"
+      CLICKHOUSE_PASSWORD: "scrybe_dev_password"
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    networks:
+      - scrybe-network
+
+networks:
+  scrybe-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+  clickhouse-data:

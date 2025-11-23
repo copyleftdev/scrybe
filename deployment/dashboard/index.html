@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Scrybe Dashboard</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background: #f5f5f5; }
+        h1 { color: #667eea; }
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .card h3 { margin: 0 0 10px 0; color: #333; }
+        .number { font-size: 32px; font-weight: bold; color: #667eea; }
+    </style>
+</head>
+<body>
+    <h1>🦉 Scrybe Dashboard</h1>
+    <div class="stats">
+        <div class="card">
+            <h3>Total Sessions</h3>
+            <div class="number" id="total">0</div>
+        </div>
+        <div class="card">
+            <h3>Unique Fingerprints</h3>
+            <div class="number" id="unique">0</div>
+        </div>
+        <div class="card">
+            <h3>Avg Confidence</h3>
+            <div class="number" id="confidence">0%</div>
+        </div>
+    </div>
+    <script>
+        // Simple dashboard - queries ClickHouse for stats
+        async function fetchStats() {
+            try {
+                const response = await fetch('http://localhost:8123/?query=SELECT count() as total FROM scrybe.sessions FORMAT JSON');
+                const data = await response.json();
+                document.getElementById('total').textContent = data.data[0]?.total || 0;
+            } catch (err) {
+                console.error('Failed to fetch stats:', err);
+            }
+        }
+        setInterval(fetchStats, 5000);
+        fetchStats();
+    </script>
+</body>
+</html>
