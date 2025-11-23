@@ -24,8 +24,9 @@
 
 pub mod config;
 pub mod error;
+pub mod privacy;
 pub mod types;
 
 // Re-export commonly used types
-pub use config::{Config, Secret, SecretConfig};
+pub use config::{Config, Secret};
 pub use error::ScrybeError;
