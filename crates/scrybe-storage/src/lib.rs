@@ -18,7 +18,9 @@
 #![warn(rust_2018_idioms)]
 #![deny(unsafe_code)]
 
+pub mod client;
 pub mod writer;
 
 // Re-export main types
+pub use client::ClickHouseClient;
 pub use writer::SessionWriter;
