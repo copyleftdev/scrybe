@@ -1,0 +1,19 @@
+[package]
+name = "scrybe-cache"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+scrybe-core = { path = "../scrybe-core" }
+
+serde = { workspace = true }
+serde_json = { workspace = true }
+redis = { workspace = true }
+deadpool-redis = { workspace = true }
+tokio = { workspace = true }
+
+[dev-dependencies]
+mockall = { workspace = true }

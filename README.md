@@ -33,20 +33,6 @@ Scrybe documents all who visit its domain—not to judge, but to remember. Every
 
 ## ✨ Key Features
 
-### 🔬 Multi-Layer Fingerprinting
-Inspired by JA3/JA4 and HTTP2/3 signature strategies:
-- TLS cipher suites, ALPN negotiation
-- HTTP version, frame order, header permutations
-- TCP options and transport-layer quirks
-
-### 🧠 Behavioral Intelligence
-Every interaction tells a story:
-- Keystroke rhythm analysis
-- Scroll delta patterns
-- Cursor entropy mapping
-- Visibility toggling and focus patterns
-
-### 🎨 Browser Surface Entropy
 Canvas, WebGL, and audio fingerprinting:
 - Multi-layer canvas tests (anti-spoofing)
 - Font enumeration patterns

@@ -1,0 +1,14 @@
+# Scrybe Code Owners
+
+# Global owners
+* @copyleftdev
+
+# Core architecture (RFC-0001)
+/crates/scrybe-core/ @copyleftdev
+/crates/scrybe-gateway/ @copyleftdev
+/crates/scrybe-enrichment/ @copyleftdev
+/crates/scrybe-storage/ @copyleftdev
+/crates/scrybe-cache/ @copyleftdev
+
+# RFCs and documentation
+/docs/rfcs/ @copyleftdev
