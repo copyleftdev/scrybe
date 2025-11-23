@@ -19,12 +19,17 @@
 #![warn(rust_2018_idioms)]
 #![deny(unsafe_code)]
 
+mod extraction;
 mod health;
+mod middleware;
+mod routes;
 mod shutdown;
 
 use axum::{routing::get, Router};
+use routes::ingest::AppState;
 use scrybe_core::{Config, ScrybeError};
 use std::net::SocketAddr;
+use std::sync::Arc;
 use tower_http::trace::TraceLayer;
 use tracing::info;
 
@@ -46,18 +51,34 @@ async fn main() -> Result<(), ScrybeError> {
 
     info!("Gateway listening on {}", addr);
 
-    // Build router
+    // Create application state
+    let state = Arc::new(AppState::new());
+
+    // Build router with all routes and middleware
     let app = Router::new()
+        // Health check routes (no authentication required)
         .route("/health", get(health::health_check))
         .route("/health/ready", get(health::readiness_check))
-        .layer(TraceLayer::new_for_http());
+        // API routes (with authentication and rate limiting)
+        .merge(routes::ingest_route())
+        // Global middleware
+        .layer(axum::middleware::from_fn(middleware::security_headers))
+        .layer(TraceLayer::new_for_http())
+        .with_state(state);
 
     // Create server with graceful shutdown
     let listener = tokio::net::TcpListener::bind(addr)
         .await
         .map_err(|e| ScrybeError::io_error("bind", e.to_string()))?;
 
+    info!("API endpoints:");
+    info!("  GET  /health - Liveness probe");
+    info!("  GET  /health/ready - Readiness probe");
+    info!("  POST /api/v1/ingest - Ingest browser telemetry");
+
     info!("Gateway ready to accept connections");
+    info!("Security: HMAC-SHA256 authentication enabled");
+    info!("Rate limit: 100 requests/minute per IP");
 
     axum::serve(listener, app)
         .with_graceful_shutdown(shutdown::shutdown_signal())

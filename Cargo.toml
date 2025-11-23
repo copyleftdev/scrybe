@@ -40,6 +40,7 @@ blake3 = "1.5"
 subtle = "2.5"  # Constant-time comparisons
 hmac = "0.12"
 ring = "0.17"
+hex = "0.4"
 
 # Bounded collections
 arrayvec = "0.7"
