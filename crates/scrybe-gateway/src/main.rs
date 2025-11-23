@@ -48,7 +48,7 @@ async fn main() -> Result<(), ScrybeError> {
 
     // Load configuration
     let config = Config::from_env()?;
-    let addr = SocketAddr::from(([127, 0, 0, 1], config.port));
+    let addr = SocketAddr::from(([0, 0, 0, 0], config.port));
 
     info!("Gateway listening on {}", addr);
 
