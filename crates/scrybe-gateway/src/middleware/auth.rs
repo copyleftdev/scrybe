@@ -50,12 +50,21 @@ pub async fn hmac_auth(
         .map_err(|_| AuthError::InvalidSignature)?;
 
     // Compute expected signature
-    let message = format!("{}:{}:{}", timestamp, nonce, String::from_utf8_lossy(&body_bytes));
+    let message = format!(
+        "{}:{}:{}",
+        timestamp,
+        nonce,
+        String::from_utf8_lossy(&body_bytes)
+    );
     let hmac_key = get_hmac_key();
     let expected_signature = compute_signature(&message, &hmac_key)?;
 
     // Constant-time comparison (prevents timing attacks)
-    if bool::from(expected_signature.as_bytes().ct_eq(provided_signature.as_bytes())) {
+    if bool::from(
+        expected_signature
+            .as_bytes()
+            .ct_eq(provided_signature.as_bytes()),
+    ) {
         debug!("HMAC authentication successful");
 
         // Restore body for downstream handlers
@@ -98,8 +107,7 @@ fn validate_timestamp(timestamp_str: &str) -> Result<(), AuthError> {
 
 /// Compute HMAC-SHA256 signature.
 fn compute_signature(message: &str, key: &[u8]) -> Result<String, AuthError> {
-    let mut mac =
-        HmacSha256::new_from_slice(key).map_err(|_| AuthError::InvalidKey)?;
+    let mut mac = HmacSha256::new_from_slice(key).map_err(|_| AuthError::InvalidKey)?;
     mac.update(message.as_bytes());
     let result = mac.finalize();
     Ok(hex::encode(result.into_bytes()))
@@ -145,9 +153,10 @@ impl IntoResponse for AuthError {
             AuthError::InvalidTimestamp => (StatusCode::UNAUTHORIZED, "Invalid timestamp".into()),
             AuthError::TimestampExpired => (StatusCode::UNAUTHORIZED, "Timestamp expired".into()),
             AuthError::InvalidSignature => (StatusCode::UNAUTHORIZED, "Invalid signature".into()),
-            AuthError::InvalidKey => {
-                (StatusCode::INTERNAL_SERVER_ERROR, "Configuration error".into())
-            }
+            AuthError::InvalidKey => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Configuration error".into(),
+            ),
         };
 
         warn!("Authentication error: {}", message);

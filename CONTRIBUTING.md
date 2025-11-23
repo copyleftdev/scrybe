@@ -12,6 +12,7 @@ This project adheres to a Code of Conduct. By participating, you are expected to
 
 - Rust 1.70+ (install via [rustup](https://rustup.rs/))
 - Git
+- cargo-audit (optional, auto-installs in hooks)
 
 ### Getting Started
 
@@ -21,12 +22,24 @@ This project adheres to a Code of Conduct. By participating, you are expected to
    cd scrybe
    ```
 
-2. Build the project:
+2. Install git hooks (recommended):
+   ```bash
+   ./.githooks/install.sh
+   ```
+   
+   This installs pre-commit hooks that run:
+   - Code formatting check
+   - Clippy lints
+   - All tests
+   - Security audit
+   - Build verification
+
+3. Build the project:
    ```bash
    cargo build --workspace
    ```
 
-3. Run tests:
+4. Run tests:
    ```bash
    cargo test --workspace
    ```
@@ -72,6 +85,10 @@ Scrybe follows [TigerStyle](https://github.com/tigerbeetle/tigerbeetle/blob/main
    - Update documentation
 
 3. **Run quality checks**
+   
+   If you installed git hooks, these run automatically on commit.
+   Otherwise, run manually:
+   
    ```bash
    # Format code
    cargo fmt --all
@@ -82,8 +99,16 @@ Scrybe follows [TigerStyle](https://github.com/tigerbeetle/tigerbeetle/blob/main
    # Run tests
    cargo test --workspace
 
+   # Security audit
+   cargo audit
+
    # Check documentation
    cargo doc --workspace --no-deps
+   ```
+   
+   **Tip**: Use fast mode for development:
+   ```bash
+   cp .githooks/pre-commit-fast .git/hooks/pre-commit
    ```
 
 4. **Commit with conventional commits**
@@ -114,13 +139,17 @@ Scrybe follows [TigerStyle](https://github.com/tigerbeetle/tigerbeetle/blob/main
 Before submitting a PR, ensure:
 
 - [ ] Code follows TigerStyle guidelines
+- [ ] Git hooks installed and passing: `./.githooks/install.sh`
 - [ ] All tests pass: `cargo test --workspace`
 - [ ] No clippy warnings: `cargo clippy --workspace -- -D warnings`
 - [ ] Code is formatted: `cargo fmt --all`
+- [ ] Security audit clean: `cargo audit`
 - [ ] Documentation is updated
 - [ ] Test coverage is maintained (>90%)
 - [ ] Commit messages follow conventional commits
 - [ ] PR description clearly explains changes
+
+**Note**: If you have git hooks installed, most of these checks run automatically on commit.
 
 ## Issue Guidelines
 

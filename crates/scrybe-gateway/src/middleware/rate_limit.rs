@@ -61,9 +61,10 @@ pub enum RateLimitError {
 impl IntoResponse for RateLimitError {
     fn into_response(self) -> Response {
         let (status, message) = match self {
-            RateLimitError::TooManyRequests => {
-                (StatusCode::TOO_MANY_REQUESTS, "Rate limit exceeded".to_string())
-            }
+            RateLimitError::TooManyRequests => (
+                StatusCode::TOO_MANY_REQUESTS,
+                "Rate limit exceeded".to_string(),
+            ),
         };
 
         (status, message).into_response()

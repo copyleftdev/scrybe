@@ -1,17 +1,17 @@
 //! Ingestion endpoint for browser session data.
 
+use crate::extraction::{extract_headers, extract_http_version, extract_ip_info};
 use axum::{
     extract::{ConnectInfo, Json, State},
     http::{HeaderMap, StatusCode, Version},
     response::IntoResponse,
 };
-use std::net::SocketAddr;
 use scrybe_core::{
     types::{BehavioralSignals, BrowserSignals, NetworkSignals, SessionId},
     ScrybeError,
 };
-use crate::extraction::{extract_headers, extract_http_version, extract_ip_info};
 use serde::{Deserialize, Serialize};
+use std::net::SocketAddr;
 use std::sync::Arc;
 use tracing::{info, warn};
 
@@ -89,8 +89,12 @@ pub async fn ingest_handler(
     let server_headers = extract_headers(&headers);
     let http_version = extract_http_version(&version);
 
-    info!("Server-side extraction: IP={}, headers={}, HTTP={:?}", 
-          client_ip, server_headers.len(), http_version);
+    info!(
+        "Server-side extraction: IP={}, headers={}, HTTP={:?}",
+        client_ip,
+        server_headers.len(),
+        http_version
+    );
 
     // Merge client-provided signals with server-side signals
     let mut network_signals = payload.network;
@@ -128,13 +132,15 @@ impl IntoResponse for AppError {
         let (status, message) = match self.0 {
             ScrybeError::InvalidSession { .. } => (StatusCode::BAD_REQUEST, self.0.to_string()),
             ScrybeError::ValidationError { .. } => (StatusCode::BAD_REQUEST, self.0.to_string()),
-            ScrybeError::AuthenticationError { .. } => {
-                (StatusCode::UNAUTHORIZED, "Authentication failed".to_string())
-            }
-            ScrybeError::RateLimit { .. } => {
-                (StatusCode::TOO_MANY_REQUESTS, self.0.to_string())
-            }
-            _ => (StatusCode::INTERNAL_SERVER_ERROR, "Internal server error".to_string()),
+            ScrybeError::AuthenticationError { .. } => (
+                StatusCode::UNAUTHORIZED,
+                "Authentication failed".to_string(),
+            ),
+            ScrybeError::RateLimit { .. } => (StatusCode::TOO_MANY_REQUESTS, self.0.to_string()),
+            _ => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Internal server error".to_string(),
+            ),
         };
 
         warn!("Request error: {} - {}", status, message);
@@ -151,12 +157,11 @@ impl IntoResponse for AppError {
 /// 3. Request handler
 pub fn ingest_route() -> axum::Router<Arc<AppState>> {
     use axum::routing::post;
-    
+
     // TODO: Add authentication middleware when fully tested
     // .layer(axum::middleware::from_fn(crate::middleware::auth::hmac_auth))
-    
-    axum::Router::new()
-        .route("/api/v1/ingest", post(ingest_handler))
+
+    axum::Router::new().route("/api/v1/ingest", post(ingest_handler))
 }
 
 #[cfg(test)]
