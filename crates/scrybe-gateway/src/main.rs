@@ -31,7 +31,7 @@ use routes::ingest::AppState;
 use scrybe_core::{Config, ScrybeError};
 use std::net::SocketAddr;
 use std::sync::Arc;
-use tower_http::trace::TraceLayer;
+use tower_http::{cors::CorsLayer, trace::TraceLayer};
 use tracing::info;
 
 #[tokio::main]
@@ -55,6 +55,9 @@ async fn main() -> Result<(), ScrybeError> {
     // Create application state
     let state = Arc::new(AppState::new());
 
+    // Configure CORS
+    let cors = CorsLayer::permissive(); // Allow all origins in dev mode
+
     // Build router with all routes and middleware
     let app = Router::new()
         // Health check routes (no authentication required)
@@ -63,6 +66,7 @@ async fn main() -> Result<(), ScrybeError> {
         // API routes (with authentication and rate limiting)
         .merge(routes::ingest_route())
         // Global middleware
+        .layer(cors)
         .layer(axum::middleware::from_fn(middleware::security_headers))
         .layer(TraceLayer::new_for_http())
         .with_state(state);
