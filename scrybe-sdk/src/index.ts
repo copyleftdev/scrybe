@@ -11,6 +11,9 @@ import type {
 } from './types';
 import { StaticCollector } from './collectors/static';
 import { CanvasCollector } from './collectors/canvas';
+import { WebGLCollector } from './collectors/webgl';
+import { AudioCollector } from './collectors/audio';
+import { FontCollector } from './collectors/fonts';
 import { BehavioralCollector } from './collectors/behavioral';
 import { HttpClient } from './transport/http';
 import { ConsentManager } from './privacy/consent';
@@ -95,13 +98,20 @@ export class Scrybe {
   private async collectSignals(): Promise<TelemetryPayload> {
     const staticCollector = new StaticCollector();
     const canvasCollector = new CanvasCollector();
+    const webglCollector = new WebGLCollector();
+    const audioCollector = new AudioCollector();
+    const fontCollector = new FontCollector();
     const behavioralCollector = new BehavioralCollector();
 
     // Collect signals in parallel
-    const [staticSignals, canvasFingerprint] = await Promise.all([
-      staticCollector.collect(),
-      canvasCollector.collect(),
-    ]);
+    const [staticSignals, canvasFingerprint, webglFingerprint, audioFingerprint, fontFingerprint] =
+      await Promise.all([
+        staticCollector.collect(),
+        canvasCollector.collect(),
+        webglCollector.collect(),
+        audioCollector.collect(),
+        fontCollector.collect(),
+      ]);
 
     // Behavioral signals are collected asynchronously
     const behavioralSignals = behavioralCollector.getSignals();
@@ -113,6 +123,9 @@ export class Scrybe {
       browser: {
         ...staticSignals.browser,
         canvas: canvasFingerprint,
+        webgl: webglFingerprint,
+        audio: audioFingerprint,
+        fonts: fontFingerprint,
       },
       behavioral: behavioralSignals,
     };
