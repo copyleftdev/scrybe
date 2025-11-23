@@ -1,4 +1,6 @@
 //! HMAC-SHA256 authentication middleware.
+//!
+//! Ready for integration - currently not wired pending complete testing.
 
 use axum::{
     body::Body,
@@ -12,6 +14,7 @@ use sha2::Sha256;
 use subtle::ConstantTimeEq;
 use tracing::{debug, warn};
 
+#[allow(dead_code)]
 type HmacSha256 = Hmac<Sha256>;
 
 /// HMAC authentication middleware.
@@ -22,6 +25,7 @@ type HmacSha256 = Hmac<Sha256>;
 /// - `X-Scrybe-Signature`: HMAC-SHA256 hex string
 ///
 /// The signature is computed over: `{timestamp}:{nonce}:{body}`
+#[allow(dead_code)] // Ready for use, pending integration testing
 pub async fn hmac_auth(
     headers: HeaderMap,
     request: Request,
@@ -113,6 +117,7 @@ fn get_hmac_key() -> Vec<u8> {
 
 /// Authentication errors.
 #[derive(Debug)]
+#[allow(dead_code)] // Ready for use, pending integration
 pub enum AuthError {
     /// Missing required header
     MissingHeader(String),

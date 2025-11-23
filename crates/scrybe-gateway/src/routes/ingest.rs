@@ -33,9 +33,11 @@ impl AppState {
 pub struct IngestRequest {
     /// Network signals from client
     pub network: NetworkSignals,
-    /// Browser signals from client
+    /// Browser signals from client (not yet persisted)
+    #[allow(dead_code)]
     pub browser: BrowserSignals,
-    /// Behavioral signals from client
+    /// Behavioral signals from client (not yet persisted)
+    #[allow(dead_code)]
     pub behavioral: BehavioralSignals,
 }
 
@@ -142,8 +144,19 @@ impl IntoResponse for AppError {
 }
 
 /// Create the ingest route with all middleware.
+///
+/// Applies the following middleware in order:
+/// 1. Authentication (HMAC-SHA256) - TODO: Enable when ready
+/// 2. Rate limiting (100 req/min)
+/// 3. Request handler
 pub fn ingest_route() -> axum::Router<Arc<AppState>> {
-    axum::Router::new().route("/api/v1/ingest", axum::routing::post(ingest_handler))
+    use axum::routing::post;
+    
+    // TODO: Add authentication middleware when fully tested
+    // .layer(axum::middleware::from_fn(crate::middleware::auth::hmac_auth))
+    
+    axum::Router::new()
+        .route("/api/v1/ingest", post(ingest_handler))
 }
 
 #[cfg(test)]

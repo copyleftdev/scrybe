@@ -1,4 +1,6 @@
 //! Rate limiting middleware using token bucket algorithm.
+//!
+//! Ready for integration - currently not wired pending complete testing.
 
 use axum::{
     extract::{ConnectInfo, Request},
@@ -17,11 +19,13 @@ use std::sync::Arc;
 use tracing::warn;
 
 /// Rate limiter using token bucket algorithm.
+#[allow(dead_code)]
 pub type GlobalRateLimiter = Arc<RateLimiter<NotKeyed, InMemoryState, DefaultClock>>;
 
 /// Create a rate limiter layer.
 ///
 /// Default: 100 requests per minute.
+#[allow(dead_code)] // Ready for use, pending integration
 pub fn rate_limit_layer() -> GlobalRateLimiter {
     let quota = Quota::per_minute(NonZeroU32::new(100).unwrap());
     Arc::new(RateLimiter::direct(quota))
@@ -30,6 +34,7 @@ pub fn rate_limit_layer() -> GlobalRateLimiter {
 /// Rate limiting middleware.
 ///
 /// Enforces 100 requests/minute per IP address using token bucket algorithm.
+#[allow(dead_code)] // Ready for use, pending integration
 pub async fn rate_limit(
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
     limiter: axum::extract::State<GlobalRateLimiter>,
@@ -47,6 +52,7 @@ pub async fn rate_limit(
 
 /// Rate limit errors.
 #[derive(Debug)]
+#[allow(dead_code)] // Ready for use, pending integration
 pub enum RateLimitError {
     /// Too many requests
     TooManyRequests,

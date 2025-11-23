@@ -25,6 +25,7 @@ pub fn extract_ip_info(connect_info: &ConnectInfo<SocketAddr>) -> IpAddr {
 /// Uses SHA-256 to create a one-way hash of the IP address combined with
 /// a salt, making it impossible to reverse while still allowing
 /// rate limiting and abuse detection.
+#[allow(dead_code)] // Ready for use, pending Redis integration
 pub fn hash_ip(ip: &IpAddr, salt: &[u8]) -> String {
     use sha2::{Digest, Sha256};
     
