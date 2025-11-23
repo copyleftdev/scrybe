@@ -1,6 +1,6 @@
 {
   "name": "@scrybe/sdk",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Lightweight browser fingerprinting SDK for Scrybe bot detection",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
