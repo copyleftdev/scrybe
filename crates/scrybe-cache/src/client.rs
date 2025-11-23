@@ -5,6 +5,7 @@ use scrybe_core::ScrybeError;
 /// Redis client with connection pool.
 ///
 /// Uses `deadpool-redis` for connection pooling with configurable pool size.
+#[derive(Clone)]
 pub struct RedisClient {
     pool: Pool,
 }

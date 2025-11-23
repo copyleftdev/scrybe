@@ -167,8 +167,9 @@ pub fn ingest_route() -> axum::Router<Arc<AppState>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::state::AppState as GatewayAppState;
     use axum::http::StatusCode;
-    use scrybe_core::types::{Header, HttpVersion, ScreenInfo, TimingMetrics};
+    use scrybe_core::{types::*, ScrybeError};
     use std::net::Ipv4Addr;
 
     fn create_test_request() -> IngestRequest {

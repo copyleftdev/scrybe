@@ -12,6 +12,7 @@ path = "src/main.rs"
 
 [dependencies]
 scrybe-core = { path = "../scrybe-core" }
+scrybe-cache = { path = "../scrybe-cache" }
 
 serde = { workspace = true }
 serde_json = { workspace = true }

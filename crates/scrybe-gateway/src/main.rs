@@ -24,6 +24,7 @@ mod health;
 mod middleware;
 mod routes;
 mod shutdown;
+mod state;
 
 use axum::{routing::get, Router};
 use routes::ingest::AppState;

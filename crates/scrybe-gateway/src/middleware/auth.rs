@@ -4,13 +4,14 @@
 
 use axum::{
     body::Body,
-    extract::Request,
+    extract::{Request, State},
     http::{HeaderMap, StatusCode},
     middleware::Next,
     response::{IntoResponse, Response},
 };
 use hmac::{Hmac, Mac};
 use sha2::Sha256;
+use std::sync::Arc;
 use subtle::ConstantTimeEq;
 use tracing::{debug, warn};
 
@@ -25,8 +26,12 @@ type HmacSha256 = Hmac<Sha256>;
 /// - `X-Scrybe-Signature`: HMAC-SHA256 hex string
 ///
 /// The signature is computed over: `{timestamp}:{nonce}:{body}`
-#[allow(dead_code)] // Ready for use, pending integration testing
+/// HMAC authentication middleware with nonce validation.
+///
+/// Validates HMAC signatures and checks nonce uniqueness via Redis.
+#[allow(dead_code)] // Ready to wire into routes
 pub async fn hmac_auth(
+    State(state): State<Arc<crate::state::AppState>>,
     headers: HeaderMap,
     request: Request,
     next: Next,
@@ -41,7 +46,17 @@ pub async fn hmac_auth(
     // Validate timestamp (must be within 5 minutes)
     validate_timestamp(&timestamp)?;
 
-    // TODO: Validate nonce for replay protection (requires Redis)
+    // Validate nonce for replay protection
+    let nonce_valid = state
+        .nonce_validator
+        .validate_nonce(&nonce)
+        .await
+        .map_err(|_| AuthError::InvalidNonce)?;
+
+    if !nonce_valid {
+        warn!("Replay attack detected: nonce already used");
+        return Err(AuthError::ReplayAttack);
+    }
 
     // Read body for signature verification
     let (parts, body) = request.into_parts();
@@ -125,37 +140,53 @@ fn get_hmac_key() -> Vec<u8> {
 
 /// Authentication errors.
 #[derive(Debug)]
-#[allow(dead_code)] // Ready for use, pending integration
 pub enum AuthError {
-    /// Missing required header
+    /// Missing or invalid header
     MissingHeader(String),
-    /// Invalid header value
-    InvalidHeader(String),
-    /// Invalid timestamp format
+    /// Invalid timestamp (too old or future)
     InvalidTimestamp,
-    /// Timestamp expired (> 5 minutes)
-    TimestampExpired,
     /// Invalid HMAC signature
     InvalidSignature,
+    /// Invalid nonce (cache error)
+    InvalidNonce,
+    /// Replay attack detected (nonce reused)
+    ReplayAttack,
+    /// Timestamp expired (> 5 minutes)
+    TimestampExpired,
     /// Invalid HMAC key
     InvalidKey,
+    /// Invalid header
+    InvalidHeader(String),
 }
 
 impl IntoResponse for AuthError {
     fn into_response(self) -> Response {
         let (status, message) = match self {
-            AuthError::MissingHeader(h) => {
-                (StatusCode::UNAUTHORIZED, format!("Missing header: {}", h))
+            AuthError::MissingHeader(header) => (
+                StatusCode::BAD_REQUEST,
+                format!("Missing header: {}", header),
+            ),
+            AuthError::InvalidTimestamp => {
+                (StatusCode::UNAUTHORIZED, "Invalid timestamp".to_string())
             }
-            AuthError::InvalidHeader(h) => {
-                (StatusCode::UNAUTHORIZED, format!("Invalid header: {}", h))
+            AuthError::InvalidSignature => {
+                (StatusCode::UNAUTHORIZED, "Invalid signature".to_string())
             }
-            AuthError::InvalidTimestamp => (StatusCode::UNAUTHORIZED, "Invalid timestamp".into()),
-            AuthError::TimestampExpired => (StatusCode::UNAUTHORIZED, "Timestamp expired".into()),
-            AuthError::InvalidSignature => (StatusCode::UNAUTHORIZED, "Invalid signature".into()),
+            AuthError::InvalidNonce => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Nonce validation failed".to_string(),
+            ),
+            AuthError::ReplayAttack => (StatusCode::CONFLICT, "Replay attack detected".to_string()),
+            AuthError::TimestampExpired => {
+                (StatusCode::UNAUTHORIZED, "Timestamp expired".to_string())
+            }
             AuthError::InvalidKey => (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                "Configuration error".into(),
+                "Configuration error".to_string(),
+            ),
+            AuthError::InvalidHeader(header) => (
+                StatusCode::BAD_REQUEST,
+                format!("Invalid header: {}", header),
             ),
         };
 
