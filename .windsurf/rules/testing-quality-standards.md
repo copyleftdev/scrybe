@@ -1,3 +1,7 @@
+---
+trigger: always_on
+---
+
 # Testing & Quality Standards
 
 **Activation**: Always On (all code files)

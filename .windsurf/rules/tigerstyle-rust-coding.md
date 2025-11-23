@@ -1,3 +1,7 @@
+---
+trigger: always_on
+---
+
 # TigerStyle Rust Coding Standards
 
 **Activation**: Always On (for Rust files: `*.rs`, `Cargo.toml`)

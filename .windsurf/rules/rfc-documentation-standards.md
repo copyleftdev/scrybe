@@ -1,3 +1,7 @@
+---
+trigger: always_on
+---
+
 # RFC & Documentation Standards
 
 **Activation**: Glob pattern `docs/**/*.md`, `*.md`

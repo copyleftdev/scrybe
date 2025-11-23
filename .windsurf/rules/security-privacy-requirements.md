@@ -1,3 +1,7 @@
+---
+trigger: always_on
+---
+
 # Security & Privacy Requirements
 
 **Activation**: Always On (all files)

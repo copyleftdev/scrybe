@@ -1,3 +1,7 @@
+---
+trigger: always_on
+---
+
 # JavaScript/TypeScript SDK Rules
 
 **Activation**: Glob pattern `*.ts`, `*.js`, `*.tsx`, `*.jsx`
