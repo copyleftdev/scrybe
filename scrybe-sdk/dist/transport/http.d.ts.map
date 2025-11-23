@@ -1,0 +1,1 @@
+{"version":3,"file":"http.d.ts","sourceRoot":"","sources":["../../src/transport/http.ts"],"names":[],"mappings":"AAIA,OAAO,KAAK,EAAE,YAAY,EAAE,gBAAgB,EAAE,cAAc,EAAE,MAAM,UAAU,CAAC;AAG/E,qBAAa,UAAU;IACrB,OAAO,CAAC,MAAM,CAAe;gBAEjB,MAAM,EAAE,YAAY;IAU1B,IAAI,CAAC,OAAO,EAAE,gBAAgB,GAAG,OAAO,CAAC,cAAc,CAAC;CA0B/D"}

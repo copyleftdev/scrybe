@@ -3,8 +3,8 @@ FROM node:18-alpine as builder
 WORKDIR /app
 
 # Copy SDK and build it
-COPY scrybe-sdk/package.json scrybe-sdk/package-lock.json ./
-RUN npm ci
+COPY scrybe-sdk/package.json ./
+RUN npm install --legacy-peer-deps
 
 COPY scrybe-sdk/ ./
 RUN npm run build

@@ -1,0 +1,1 @@
+{"version":3,"file":"audio.d.ts","sourceRoot":"","sources":["../../src/collectors/audio.ts"],"names":[],"mappings":"AAOA,OAAO,KAAK,EAAE,gBAAgB,EAAE,MAAM,UAAU,CAAC;AAGjD,qBAAa,cAAc;IAMnB,OAAO,IAAI,OAAO,CAAC,gBAAgB,GAAG,SAAS,CAAC;IA6DtD,OAAO,CAAC,kBAAkB;CAY3B"}

@@ -2,6 +2,7 @@
   "name": "@scrybe/sdk",
   "version": "1.0.0",
   "description": "Lightweight browser fingerprinting SDK for Scrybe bot detection",
+  "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
@@ -47,7 +48,9 @@
     "ts-jest": "^29.1.1",
     "typescript": "^5.3.3"
   },
-  "dependencies": {},
+  "dependencies": {
+    "tslib": "^2.6.2"
+  },
   "browserslist": [
     "> 1%",
     "last 2 versions",
