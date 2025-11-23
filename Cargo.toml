@@ -1,0 +1,52 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/scrybe-core",
+    "crates/scrybe-gateway",
+    "crates/scrybe-enrichment",
+    "crates/scrybe-storage",
+    "crates/scrybe-cache",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["Scrybe Engineering <engineering@scrybe.io>"]
+license = "MIT"
+repository = "https://github.com/copyleftdev/scrybe"
+
+[workspace.dependencies]
+# Core
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.6", features = ["v4", "serde"] }
+thiserror = "1.0"
+
+# Web framework
+axum = "0.7"
+tokio = { version = "1", features = ["full"] }
+tower = { version = "0.4", features = ["limit", "timeout", "buffer"] }
+tower-http = { version = "0.5", features = ["trace", "cors"] }
+
+# Storage
+clickhouse = "0.11"
+redis = { version = "0.24", features = ["tokio-comp"] }
+deadpool-redis = "0.14"
+
+# Cryptography (no openssl - using ring/rustls as per TigerStyle)
+sha2 = "0.10"
+blake3 = "1.5"
+subtle = "2.5"  # Constant-time comparisons
+hmac = "0.12"
+ring = "0.17"
+
+# Bounded collections
+arrayvec = "0.7"
+
+# Telemetry
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+# Testing
+mockall = "0.12"
