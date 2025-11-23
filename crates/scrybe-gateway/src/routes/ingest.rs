@@ -1,14 +1,16 @@
 //! Ingestion endpoint for browser session data.
 
 use axum::{
-    extract::{Json, State},
-    http::StatusCode,
+    extract::{ConnectInfo, Json, State},
+    http::{HeaderMap, StatusCode, Version},
     response::IntoResponse,
 };
+use std::net::SocketAddr;
 use scrybe_core::{
-    types::{BehavioralSignals, BrowserSignals, NetworkSignals, Session, SessionId},
+    types::{BehavioralSignals, BrowserSignals, NetworkSignals, SessionId},
     ScrybeError,
 };
+use crate::extraction::{extract_headers, extract_http_version, extract_ip_info};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tracing::{info, warn};
@@ -73,16 +75,33 @@ pub struct IngestResponse {
 /// - `503 Service Unavailable`: Backend unavailable
 pub async fn ingest_handler(
     State(_state): State<Arc<AppState>>,
-    Json(_payload): Json<IngestRequest>,
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
+    headers: HeaderMap,
+    version: Version,
+    Json(payload): Json<IngestRequest>,
 ) -> Result<impl IntoResponse, AppError> {
-    info!("Received ingest request");
+    info!("Received ingest request from {}", addr.ip());
+
+    // Extract server-side signals
+    let client_ip = extract_ip_info(&ConnectInfo(addr));
+    let server_headers = extract_headers(&headers);
+    let http_version = extract_http_version(&version);
+
+    info!("Server-side extraction: IP={}, headers={}, HTTP={:?}", 
+          client_ip, server_headers.len(), http_version);
+
+    // Merge client-provided signals with server-side signals
+    let mut network_signals = payload.network;
+    network_signals.ip = client_ip;
+    network_signals.http_version = http_version;
+    // Append server-extracted headers (client can't spoof these)
+    network_signals.headers.extend(server_headers);
 
     // TODO: Validate payload
-    // TODO: Extract server-side signals
     // TODO: Store in Redis
     // TODO: Enqueue for enrichment
 
-    // For now, just create a placeholder response
+    // Create session
     let session_id = SessionId::new();
 
     Ok(Json(IngestResponse {
@@ -131,9 +150,7 @@ pub fn ingest_route() -> axum::Router<Arc<AppState>> {
 mod tests {
     use super::*;
     use axum::http::StatusCode;
-    use scrybe_core::types::{
-        Header, HttpVersion, MouseButton, ScreenInfo, TimingMetrics,
-    };
+    use scrybe_core::types::{Header, HttpVersion, ScreenInfo, TimingMetrics};
     use std::net::Ipv4Addr;
 
     fn create_test_request() -> IngestRequest {
@@ -169,8 +186,18 @@ mod tests {
     async fn test_ingest_handler_returns_session_id() {
         let state = Arc::new(AppState::new());
         let request = create_test_request();
+        let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
+        let headers = axum::http::HeaderMap::new();
+        let version = axum::http::Version::HTTP_11;
 
-        let result = ingest_handler(State(state), Json(request)).await;
+        let result = ingest_handler(
+            State(state),
+            ConnectInfo(addr),
+            headers,
+            version,
+            Json(request),
+        )
+        .await;
         assert!(result.is_ok());
 
         let response = result.unwrap().into_response();

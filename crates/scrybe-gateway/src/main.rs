@@ -19,6 +19,7 @@
 #![warn(rust_2018_idioms)]
 #![deny(unsafe_code)]
 
+mod extraction;
 mod health;
 mod middleware;
 mod routes;
